@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Activity, X, RotateCcw, Brain, CheckCircle, AlertTriangle, Loader, UploadCloud } from 'lucide-react';
+import * as tf from '@tensorflow/tfjs';
 import * as DB from '../services/db';
 
 interface SpiralTestProps {
@@ -148,29 +149,45 @@ export default function SpiralTest({ patientId, onBack, isDark }: SpiralTestProp
         try {
             // Step 1: Image Preprocessing (Grayscale, Resize 128x128, Normalization)...
             setProcessStep(1);
-            
-            // Connect to real python backend API (uses environment variable on Vercel)
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-            const response = await fetch(`${apiUrl}/predict/spiral`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ image: imageUrl }),
+
+            // Load the image into an HTMLImageElement
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            await new Promise<void>((resolve, reject) => {
+                img.onload = () => resolve();
+                img.onerror = (e) => reject(e);
+                img.src = imageUrl;
             });
 
-            if (!response.ok) {
-                throw new Error(`API error! status: ${response.status}`);
-            }
+            // Preprocess: resize to 128x128, convert to grayscale, normalize to [0, 1]
+            const tensor = tf.tidy(() => {
+                let t = tf.browser.fromPixels(img, 1); // grayscale (1 channel)
+                t = tf.image.resizeBilinear(t, [128, 128]);
+                t = t.toFloat().div(255.0);
+                return t.expandDims(0); // add batch dimension: [1, 128, 128, 1]
+            });
 
-            // Step 2: Extracting Feature Maps via 4-Layer Convolutional Network...
+            // Step 2: Loading CNN Model & Extracting Feature Maps...
             setProcessStep(2);
-            const data = await response.json();
+
+            // Load the TensorFlow.js model from the public directory
+            const model = await tf.loadLayersModel('/tfjs_model/model.json');
 
             // Step 3: Evaluating Probability via Fully Connected Softmax Output...
             setProcessStep(3);
-            
-            const finalScore = data.parkinson_risk_score;
+
+            // Run inference
+            const prediction = model.predict(tensor) as tf.Tensor;
+            const probs = await prediction.data();
+
+            // probs[0] = Healthy probability, probs[1] = Parkinson probability
+            const parkinsonProb = probs[1] * 100.0;
+            const finalScore = parkinsonProb;
+
+            // Cleanup tensors
+            tensor.dispose();
+            prediction.dispose();
+
             setResultScore(finalScore);
 
             setTimeout(() => {
@@ -179,10 +196,11 @@ export default function SpiralTest({ patientId, onBack, isDark }: SpiralTestProp
             }, 500); // 500ms delay to show step 3 tick
 
         } catch (error) {
-            console.error("Failed to connect to ML Backend:", error);
-            alert("Error connecting to the ML Backend. Please ensure the Flask server (backend_api.py) is running on port 5000.");
+            console.error("ML Inference Error:", error);
+            alert("Error running the ML model. Please try again.");
             setState('DRAWING');
-        }    };
+        }
+    };
 
     const handleSaveRecord = async () => {
         if (resultScore === null || !resultImageUrl) return;
