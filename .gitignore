@@ -1,1 +1,6 @@
 node_modules
+dist
+Detection-of-Parkinson-s-disease-with-Spiral-Wave-Test/
+tree_output.txt
+__pycache__/
+*.pyc
