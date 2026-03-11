@@ -149,8 +149,9 @@ export default function SpiralTest({ patientId, onBack, isDark }: SpiralTestProp
             // Step 1: Image Preprocessing (Grayscale, Resize 128x128, Normalization)...
             setProcessStep(1);
             
-            // Connect to real python backend API
-            const response = await fetch('http://localhost:5000/predict/spiral', {
+            // Connect to real python backend API (uses environment variable on Vercel)
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const response = await fetch(`${apiUrl}/predict/spiral`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
