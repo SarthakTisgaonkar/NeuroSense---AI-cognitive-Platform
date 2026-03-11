@@ -16,7 +16,6 @@ export default function SpiralTest({ patientId, onBack, isDark }: SpiralTestProp
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const [hasDrawn, setHasDrawn] = useState(false);
-    const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
     // Processing states
     const [processStep, setProcessStep] = useState(0);
