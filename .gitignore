@@ -1,6 +1,40 @@
-node_modules
-dist
-Detection-of-Parkinson-s-disease-with-Spiral-Wave-Test/
-tree_output.txt
-__pycache__/
-*.pyc
+# General
+.DS_Store
+Thumbs.db
+
+# Node/Vite
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.eslintcache
+frontend/coverage/
+
+# Python/Flask
+backend/__pycache__/
+backend/*.py[cod]
+backend/*$py.class
+backend/.venv/
+backend/venv/
+backend/env/
+backend/flask_session/
+
+# Data and Logs
+backend/*.sqlite3
+backend/db.sqlite3
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Allow small models, ignore large models EXCEPT those explicitly tracked
+# Note: We will git add the explicitly required models so they bypass this ignore
+backend/*.h5
+backend/*.keras
+backend/*.joblib
+
+# But force inclusion of needed models
+!backend/cnn_parkinson_model_refined.keras
+!backend/parkinson_disease_detection.h5
+!backend/spiral_model_fixed.keras

@@ -1,0 +1,22 @@
+D:\Internship\Pd\12 07 2025\spiral_drawing_dataset\spiral\testing
+D:\Internship\Pd\12 07 2025\spiral_drawing_dataset\spiral\training
+D:\Internship\Pd\12 07 2025\spiral_drawing_dataset\spiral\validation
+D:\Internship\Pd\Parkinson 10 07 2025\spiral_drawing_dataset\spiral\testing
+D:\Internship\Pd\Parkinson 10 07 2025\spiral_drawing_dataset\spiral\training
+D:\Internship\Pd\Parkinson 10 07 2025\spiral_drawing_dataset\spiral\validation
+D:\Internship\Pd\pd ExA\archive (3)\spiral\testing
+D:\Internship\Pd\pd ExA\archive (3)\spiral\training
+D:\Internship\Pd\pd ExA\archive (3)\wave\testing
+D:\Internship\Pd\pd ExA\archive (3)\wave\training
+D:\Internship\Pd\pd ExA\raw_audio_dataset
+D:\Internship\Referance photos\Audio
+D:\Internship\Referance photos\spiral\testing
+D:\Internship\Referance photos\spiral\training
+D:\Internship\Referance photos\Training Data\drawings\spiral\testing
+D:\Internship\Referance photos\Training Data\drawings\spiral\training
+D:\Internship\Referance photos\Training Data\drawings\wave\testing
+D:\Internship\Referance photos\Training Data\drawings\wave\training
+D:\Internship\Referance photos\Training Data\spiral\testing
+D:\Internship\Referance photos\Training Data\spiral\training
+D:\Internship\Referance photos\Training Data\wave\testing
+D:\Internship\Referance photos\Training Data\wave\training

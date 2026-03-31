@@ -1,0 +1,421 @@
+<!-- detection_app/templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parkinson's Disease Detection System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Light gray background */
+            color: #333;
+        }
+        .gradient-bg {
+            background: linear-gradient(to right, #6a0dad, #8a2be2); /* Purple gradient */
+        }
+        .btn-primary {
+            background-color: #8a2be2; /* Violet */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px; /* Fully rounded */
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary:hover {
+            background-color: #6a0dad; /* Darker violet on hover */
+        }
+        .section-title {
+            color: #1a202c; /* Dark text */
+            font-size: 2.25rem; /* text-4xl */
+            font-weight: 800; /* font-extrabold */
+            margin-bottom: 2rem;
+        }
+        .card {
+            background-color: white;
+            border-radius: 1.5rem; /* rounded-3xl */
+            padding: 2rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* shadow-xl */
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .icon-circle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 9999px;
+            background-color: #e9d5ff; /* Light purple */
+            color: #8a2be2; /* Violet */
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .footer-link {
+            color: #cbd5e0; /* Gray-300 */
+            transition: color 0.3s ease;
+        }
+        .footer-link:hover {
+            color: #ffffff;
+        }
+
+        /* Navbar specific styles */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #333;
+        }
+        .navbar-links a {
+            color: #4a5568;
+            font-weight: 500;
+            margin-left: 2rem;
+            transition: color 0.3s ease;
+        }
+        .navbar-links a:hover {
+            color: #8a2be2;
+        }
+        .navbar-auth {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .navbar-auth .login-link {
+            color: #4a5568;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.3s ease;
+        }
+        .navbar-auth .login-link:hover {
+            color: #8a2be2;
+        }
+        .navbar-auth .get-started-btn {
+            background-color: #8a2be2;
+            color: white;
+            padding: 0.5rem 1.25rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .navbar-auth .get-started-btn:hover {
+            background-color: #6a0dad;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+        .user-icon {
+            font-size: 1.25rem;
+            color: #8a2be2;
+        }
+        .logout-btn {
+            background-color: #ef4444; /* Red */
+            color: white;
+            padding: 0.5rem 1.25rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .logout-btn:hover {
+            background-color: #dc2626; /* Darker red */
+        }
+
+        /* Message Styles (for landing page too) */
+        .message-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            width: auto;
+            max-width: 90%;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            animation: fadeInOut 4s ease-in-out forwards;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .message-success {
+            background-color: #d1fae5; /* Green-100 */
+            color: #065f46; /* Green-800 */
+            border: 1px solid #34d399; /* Green-400 */
+        }
+        .message-error {
+            background-color: #fee2e2; /* Red-100 */
+            color: #991b1b; /* Red-800 */
+            border: 1px solid #f87171; /* Red-400 */
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header/Navigation -->
+    <header class="navbar">
+        <div class="navbar-brand">PD ParkinsonAI</div>
+        <nav class="navbar-links">
+            <a href="{% url 'home' %}" class="font-bold text-purple-700">Home</a>
+            <a href="{% url 'upload_assessment' %}">Assessment</a>
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+        </nav>
+        <div class="navbar-auth">
+            {% if user.is_authenticated %}
+                <div class="user-info">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 user-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Hello, {{ user.username }}</span>
+                </div>
+                <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="login-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                    </svg>
+                    Login
+                </a>
+                <a href="{% url 'register' %}" class="get-started-btn">Get Started</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-20 px-6 md:px-12 text-center rounded-b-3xl">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
+                Early Parkinson's Disease Detection System
+            </h1>
+            <p class="text-lg md:text-xl mb-8 opacity-90">
+                Advanced machine learning technology that analyzes speech patterns, spiral drawings,
+                and posture videos to provide early detection of Parkinson's disease symptoms.
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <a href="{% url 'quiz' %}" class="btn-primary inline-block">Start Assessment</a>
+                <a href="{% url 'demo_video' %}" class="bg-transparent border border-white text-white py-3 px-6 rounded-full font-semibold transition duration-300 hover:bg-white hover:text-purple-700">
+                    Watch Demo
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Metrics Section -->
+    <section class="py-16 px-6 md:px-12 bg-white -mt-12 relative z-10 rounded-3xl mx-4 md:mx-auto max-w-6xl shadow-lg">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div class="p-6">
+                <p class="text-5xl font-extrabold text-purple-700 mb-2">94%</p>
+                <p class="text-gray-600 text-lg">Accuracy Rate</p>
+            </div>
+            <div class="p-6">
+                <p class="text-5xl font-extrabold text-purple-700 mb-2">5min</p>
+                <p class="text-gray-600 text-lg">Assessment Time</p>
+            </div>
+            <div class="p-6">
+                <p class="text-5xl font-extrabold text-purple-700 mb-2">10K+</p>
+                <p class="text-gray-600 text-lg">Tests Completed</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Three Simple Assessment Methods Section -->
+    <section class="py-20 px-6 md:px-12 bg-gray-50">
+        <div class="max-w-6xl mx-auto text-center">
+            <h2 class="section-title">Three Simple Assessment Methods</h2>
+            <p class="text-lg text-gray-700 mb-12">
+                Our AI analyzes multiple biomarkers to provide comprehensive early detection
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Speech Analysis Card -->
+                <div class="card">
+                    <div class="text-purple-700 text-5xl mb-4">🎤</div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Speech Analysis</h3>
+                    <p class="text-gray-600 mb-4">
+                        Analyzes vocal tremors, speech rhythm, and articulation patterns to help indicate early Parkinson's symptoms.
+                    </p>
+                    <ul class="text-left text-gray-500 text-sm space-y-1">
+                        <li>• Voice tremor detection</li>
+                        <li>• Speech rhythm analysis</li>
+                        <li>• Articulation clarity</li>
+                    </ul>
+                </div>
+
+                <!-- Spiral Drawing Card -->
+                <div class="card">
+                    <div class="text-purple-700 text-5xl mb-4">✍️</div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Spiral Drawing</h3>
+                    <p class="text-gray-600 mb-4">
+                        Evaluates hand tremors and motor control by assessing the smoothness and consistency of spiral drawings.
+                    </p>
+                    <ul class="text-left text-gray-500 text-sm space-y-1">
+                        <li>• Tremor amplitude measurement</li>
+                        <li>• Line consistency</li>
+                        <li>• Line movement reduction</li>
+                    </ul>
+                </div>
+
+                <!-- Posture Video Card -->
+                <div class="card">
+                    <div class="text-purple-700 text-5xl mb-4">📹</div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Posture Video</h3>
+                    <p class="text-gray-600 mb-4">
+                        Computer vision analyzes walking patterns, balance, and subtle changes to detect movement disorders.
+                    </p>
+                    <ul class="text-left text-gray-500 text-sm space-y-1">
+                        <li>• Gait pattern recognition</li>
+                        <li>• Balance assessment</li>
+                        <li>• Postural sway analysis</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="py-20 px-6 md:px-12 bg-white">
+        <div class="max-w-6xl mx-auto text-center">
+            <h2 class="section-title">How It Works</h2>
+            <p class="text-lg text-gray-700 mb-12">
+                Our AI system combines multiple assessment methods for accurate early detection
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Step 1: Record -->
+                <div class="flex flex-col items-center text-center">
+                    <div class="icon-circle mb-4">1</div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Record</h3>
+                    <p class="text-gray-600">
+                        Complete three simple assessments: speech, video, and spiral.
+                    </p>
+                </div>
+                <!-- Step 2: Analyze -->
+                <div class="flex flex-col items-center text-center">
+                    <div class="icon-circle mb-4">2</div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Analyze</h3>
+                    <p class="text-gray-600">
+                        AI algorithms process your data using advanced machine learning.
+                    </p>
+                </div>
+                <!-- Step 3: Evaluate -->
+                <div class="flex flex-col items-center text-center">
+                    <div class="icon-circle mb-4">3</div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Evaluate</h3>
+                    <p class="text-gray-600">
+                        Multiple biomarkers are combined for comprehensive assessment.
+                    </p>
+                </div>
+                <!-- Step 4: Report -->
+                <div class="flex flex-col items-center text-center">
+                    <div class="icon-circle mb-4">4</div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Report</h3>
+                    <p class="text-gray-600">
+                        Receive detailed results and recommendations.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Ready To Get Started Section -->
+    <section class="gradient-bg text-white py-20 px-6 md:px-12 text-center rounded-t-3xl mt-12">
+        <div class="max-w-3xl mx-auto">
+            <h2 class="text-3xl md:text-4xl font-extrabold mb-4">Ready To Get Started?</h2>
+            <p class="text-lg md:text-xl mb-8 opacity-90">
+                Take the first step towards early detection. Our assessment takes just 5 minutes and provides immediate insights.
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <a href="{% url 'quiz' %}" class="btn-primary inline-block">Start Assessment</a>
+                <a href="{% url 'demo_video' %}" class="bg-transparent border border-white text-white py-3 px-6 rounded-full font-semibold transition duration-300 hover:bg-white hover:text-purple-700">
+                    Watch Demo
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-12 px-6 md:px-12">
+        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+            <!-- Brand Info -->
+            <div>
+                <h3 class="text-white text-xl font-bold mb-4">ParkPredict</h3>
+                <p class="text-sm">
+                    Empowering early Parkinson's disease detection through innovative assessment methods.
+                </p>
+            </div>
+            <!-- Product Links -->
+            <div>
+                <h4 class="text-white font-semibold mb-4">Product</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#" class="footer-link">How it Works</a></li>
+                    <li><a href="#" class="footer-link">Features</a></li>
+                    <li><a href="#" class="footer-link">Pricing</a></li>
+                    <li><a href="#" class="footer-link">API</a></li>
+                </ul>
+            </div>
+            <!-- Company Links -->
+            <div>
+                <h4 class="text-white font-semibold mb-4">Company</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#" class="footer-link">About Us</a></li>
+                    <li><a href="#" class="footer-link">Research</a></li>
+                    <li><a href="#" class="footer-link">Careers</a></li>
+                    <li><a href="#" class="footer-link">Contact</a></li>
+                </ul>
+            </div>
+            <!-- Legal Links -->
+            <div>
+                <h4 class="text-white font-semibold mb-4">Legal</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                    <li><a href="#" class="footer-link">Terms of Service</a></li>
+                    <li><a href="#" class="footer-link">Data Security</a></li>
+                    <li><a href="#" class="footer-link">Medical Disclaimer</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="text-center text-gray-500 text-sm mt-12">
+            &copy; 2024 ParkPredict. All rights reserved. Not a substitute for professional medical advice.
+        </div>
+    </footer>
+
+    {# Display Django messages #}
+    {% if messages %}
+        <div class="message-container {% for message in messages %}{% if message.tags == 'success' %}message-success{% elif message.tags == 'error' %}message-error{% endif %}{% endfor %}">
+            {% for message in messages %}
+                {% if message.tags == 'success' %}
+                    <span>✅</span>
+                {% elif message.tags == 'error' %}
+                    <span>❌</span>
+                {% endif %}
+                {{ message }}
+            {% endfor %}
+        </div>
+    {% endif %}
+</body>
+</html>

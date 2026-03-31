@@ -1,0 +1,11 @@
+Flask
+Flask-Cors
+opencv-python
+numpy
+tensorflow
+tf-keras
+librosa
+imageio_ffmpeg
+Pillow
+soundfile
+gunicorn

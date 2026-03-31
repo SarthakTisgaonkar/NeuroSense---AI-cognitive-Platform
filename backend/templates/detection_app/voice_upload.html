@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Voice Sample Upload</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #0f0c29;
+      font-family: 'Poppins', sans-serif;
+      height: 100vh;
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+
+    .card {
+      position: relative;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(25px);
+      border-radius: 22px;
+      padding: 50px 30px;
+      text-align: center;
+      color: #fff;
+      width: 420px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.5);
+      animation: floatCard 5s ease-in-out infinite alternate;
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,0.07);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, #00ffe7, #ff0080, #ffd166, #7928ca);
+      background-size: 400% 400%;
+      animation: borderShift 6s ease infinite;
+      z-index: 0;
+      filter: blur(12px);
+      opacity: 0.4;
+      border-radius: 25px;
+    }
+
+    .card:hover::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.08) 0%, transparent 70%);
+      animation: pulseRipple 0.8s ease-out;
+      border-radius: 22px;
+      z-index: 1;
+    }
+
+    @keyframes borderShift {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
+    }
+
+    @keyframes pulseRipple {
+      0% {opacity: 0.4;}
+      100% {opacity: 0;}
+    }
+
+    @keyframes floatCard {
+      0% { transform: translateY(0px) scale(1); }
+      100% { transform: translateY(-10px) scale(1.03); }
+    }
+
+    .card h2 {
+      font-size: 28px;
+      color: #ffd166;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .file-input {
+      margin-bottom: 25px;
+      position: relative;
+      z-index: 2;
+    }
+
+    input[type="file"] {
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid #ffd166;
+      color: #fff;
+      border-radius: 12px;
+      width: 100%;
+    }
+
+    input[type="file"]::file-selector-button {
+      background: #ffd166;
+      border: none;
+      color: #333;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-right: 12px;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      background: #ff9f1c;
+    }
+
+    .btn {
+      padding: 14px 34px;
+      border: none;
+      border-radius: 30px;
+      background: #ffd166;
+      color: #333;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .btn:hover {
+      background: #ff9f1c;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <!-- Back to Home Top-Left -->
+<a href="/" style="
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 999;
+  background-color: #FFD166;
+  padding: 10px 20px;
+  border-radius: 30px;
+  color: black;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+  ⬅ Back to Home
+</a>
+
+
+<canvas id="blob"></canvas>
+
+<div class="container">
+  <div class="card">
+    <h2>Upload Voice Sample</h2>
+    <div class="file-input">
+      <input type="file" accept="audio/*">
+    </div>
+    <button class="btn">Upload</button>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById("blob");
+  const ctx = canvas.getContext("2d");
+
+  let w = canvas.width = window.innerWidth;
+  let h = canvas.height = window.innerHeight;
+
+  let time = 0;
+
+  function animate() {
+    ctx.clearRect(0, 0, w, h);
+
+    let gradient = ctx.createRadialGradient(w/2, h/2, 100, w/2, h/2, 600);
+    gradient.addColorStop(0, 'rgba(0,255,255,0.12)');
+    gradient.addColorStop(0.5, 'rgba(255,0,128,0.06)');
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.beginPath();
+    for(let i=0; i<Math.PI*2; i+=0.02){
+      let x = w/2 + Math.cos(i) * (160 + Math.sin(time + i*8) * 35);
+      let y = h/2 + Math.sin(i) * (160 + Math.sin(time + i*8) * 35);
+      ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 209, 102, 0.05)';
+    ctx.fill();
+
+    time += 0.005;
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  window.addEventListener("resize", () => {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  });
+</script>
+
+</body>
+</html>

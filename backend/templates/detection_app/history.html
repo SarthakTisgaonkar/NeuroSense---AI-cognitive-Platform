@@ -1,0 +1,29 @@
+
+<div class="max-w-4xl mx-auto mt-8 p-6 bg-white rounded shadow">
+    <h2 class="text-2xl font-bold mb-4">Assessment History</h2>
+    <table class="table-auto w-full">
+        <thead>
+            
+            <tr>
+                <th class="border px-4 py-2">Date</th>
+                <th class="border px-4 py-2">Test Type</th>
+                <th class="border px-4 py-2">Result</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for history in histories %}
+            <tr>
+                <td class="border px-4 py-2">{{ history.date_taken|date:"Y-m-d H:i" }}</td>
+                <td class="border px-4 py-2">{{ history.date_taken }}</td>
+                <td class="border px-4 py-2">{{ history.test_type }}</td>
+                <td class="border px-4 py-2">{{ history.result }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="border px-4 py-2 text-center">No assessments yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+

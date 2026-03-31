@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Thank You!</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: #0f0c29;
+      overflow: hidden;
+    }
+
+    /* Particle Canvas */
+    canvas#particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      height: 100vh;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .box {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      padding: 30px 20px;
+      border-radius: 18px;
+      color: #fff;
+      max-width: 300px;
+      width: 90%;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+    }
+
+    .box:nth-child(1) {
+      animation: slideInLeft 1.5s ease forwards;
+      animation-delay: 0.5s;
+    }
+
+    .box:nth-child(2) {
+      animation: slideInTop 1.5s ease forwards;
+      animation-delay: 1s;
+    }
+
+    .box:nth-child(3) {
+      animation: slideInRight 1.5s ease forwards;
+      animation-delay: 1.5s;
+    }
+
+    @keyframes slideInLeft {
+      0% { transform: translateX(-200px); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes slideInTop {
+      0% { transform: translateY(-200px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes slideInRight {
+      0% { transform: translateX(200px); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+
+    .box h3 {
+      color: #ffd166;
+      margin-bottom: 15px;
+      font-size: 20px;
+    }
+
+    .box p, .box a {
+      color: #ddd;
+      font-size: 14px;
+      text-decoration: none;
+      display: block;
+      margin-bottom: 10px;
+      transition: color 0.3s ease;
+    }
+
+    .box a:hover {
+      color: #ff9f1c;
+    }
+
+    .btn {
+      padding: 14px 34px;
+      border: none;
+      border-radius: 30px;
+      background: #ffd166;
+      color: #333;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 20px;
+    }
+
+    .btn:hover {
+      background: #ff9f1c;
+      transform: scale(1.05);
+    }
+
+    .box h2 {
+      font-size: 28px;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Particle Background Canvas -->
+  <canvas id="particles"></canvas>
+
+  <!-- Content Cards -->
+  <div class="container">
+
+    <div class="box">
+      <h3>About This Project</h3>
+      <p>This Parkinson's Detection system uses AI and real-time analysis of spiral drawings and voice samples to assist early diagnosis.</p>
+    </div>
+
+    <div class="box">
+      <h2>Thank You!</h2>
+      <p>Your submission has been received successfully.</p>
+      <a href="{% url 'home' %}" class="btn">Go Back Home</a>
+    </div>
+
+    <div class="box">
+      <h3>Contact Us</h3>
+      <a href="mailto:your.email@example.com">📧 your.email@example.com</a>
+      <a href="https://linkedin.com/in/yourprofile" target="_blank">🔗 LinkedIn Profile</a>
+      <a href="https://github.com/yourgithub" target="_blank">🐙 GitHub Repository</a>
+    </div>
+
+  </div>
+
+  <!-- JS for Particle Animation -->
+  <script>
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+
+    let w = canvas.width = window.innerWidth;
+    let h = canvas.height = window.innerHeight;
+
+    const particles = [];
+
+    for (let i = 0; i < 80; i++) {
+      particles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: Math.random() * 0.8 - 0.4,
+        vy: Math.random() * 0.8 - 0.4,
+        radius: Math.random() * 2 + 1
+      });
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, w, h);
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0 || p.x > w) p.vx *= -1;
+        if (p.y < 0 || p.y > h) p.vy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffd166';
+        ctx.fill();
+      });
+
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 130) {
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(255, 209, 102, 0.2)';
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    });
+  </script>
+
+</body>
+</html>

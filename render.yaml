@@ -1,10 +1,23 @@
 services:
   - type: web
-    name: neurosense-ml-backend
+    name: neurosense-backend
     env: python
+    rootDir: backend
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn backend_api:app --timeout 120"
-    plan: free
+    startCommand: "gunicorn app:app -w 2 -b 0.0.0.0:$PORT --preload --timeout 120"
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10.13
+        value: 3.10.0
+
+  - type: web
+    name: neurosense-frontend
+    env: node
+    rootDir: frontend
+    buildCommand: "npm install && npm run build && npm install -g serve"
+    startCommand: "serve -s dist -l $PORT"
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: neurosense-backend
+          envVarKey: RENDER_EXTERNAL_URL

@@ -1,0 +1,389 @@
+<!-- detection_app/templates/upload_assessment.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Assessment Files - ParkPredict</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Light gray background */
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .gradient-bg-upload {
+            background: linear-gradient(to bottom, #e0f2fe, #bfdbfe); /* Light blue gradient */
+        }
+        .header-bg {
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+        .section-title {
+            color: #1a202c;
+            font-size: 2.5rem; /* text-4xl */
+            font-weight: 800; /* font-extrabold */
+            margin-bottom: 1rem;
+            animation: slideInDown 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        .section-subtitle {
+            color: #4a5568;
+            font-size: 1.125rem; /* text-lg */
+            margin-bottom: 3rem;
+            animation: fadeIn 1s ease-out forwards;
+            animation-delay: 0.3s;
+            opacity: 0;
+        }
+
+        .upload-card-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1000px;
+        }
+        @media (min-width: 768px) {
+            .upload-card-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .upload-card {
+            background-color: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInScale 0.8s ease-out forwards;
+            opacity: 0;
+            transform: scale(0.9);
+            border: 2px dashed #cbd5e0; /* Dashed border for drop area */
+        }
+        .upload-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15);
+        }
+        .upload-card:nth-child(1) { animation-delay: 0.6s; }
+        .upload-card:nth-child(2) { animation-delay: 0.8s; }
+        .upload-card:nth-child(3) { animation-delay: 1.0s; }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #8a2be2; /* Violet */
+            margin-bottom: 1rem;
+        }
+        .upload-title {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+        .upload-description {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-bottom: 1.5rem;
+        }
+        .file-input-label {
+            display: inline-block;
+            background-color: #8a2be2;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .file-input-label:hover {
+            background-color: #6a0dad;
+        }
+        .file-input {
+            display: none;
+        }
+        .file-name {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #4a5568;
+            font-weight: 500;
+        }
+        .accepted-formats {
+            font-size: 0.8rem;
+            color: #a0aec0;
+            margin-top: 0.5rem;
+        }
+
+        .ai-analysis-card {
+            background-color: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin-top: 3rem;
+            width: 100%;
+            max-width: 600px;
+            animation: fadeInScale 0.8s ease-out forwards;
+            animation-delay: 1.2s;
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        .ai-analysis-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+        .ai-analysis-description {
+            color: #718096;
+            margin-bottom: 1.5rem;
+        }
+        .analyze-btn {
+            background-color: #8a2be2;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 1.125rem;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex; /* Use flex for centering content */
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem; /* Space between text and spinner */
+            margin: 0 auto; /* Center the button */
+        }
+        .analyze-btn:hover {
+            background-color: #6a0dad;
+            transform: translateY(-2px);
+        }
+        .analyze-btn:disabled {
+            background-color: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Keyframe Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="antialiased gradient-bg-upload">
+
+    <!-- Header -->
+    <header class="header-bg py-4 px-6 md:px-12 flex justify-between items-center">
+        <div class="text-xl font-bold text-gray-800">Parkinson's Disease Assessment</div>
+        <a href="{% url 'home' %}" class="btn-home">Back to Home</a>
+    </header>
+
+    <main class="main-content">
+        <h1 class="section-title">Parkinson's Disease Assessment</h1>
+        <p class="section-subtitle">Please upload the required files for comprehensive analysis</p>
+
+        <form id="uploadForm" class="upload-card-container" enctype="multipart/form-data">
+            <!-- Speech Recording Card -->
+            <div class="upload-card">
+                <div class="upload-icon">🎤</div>
+                <h2 class="upload-title">Speech Recording</h2>
+                <p class="upload-description">Upload a voice recording for speech pattern analysis</p>
+                <label for="speech_file" class="file-input-label">
+                    Click to upload or drag and drop
+                </label>
+                <input type="file" id="speech_file" name="speech_file" accept=".mp3,.wav,.m4a" class="file-input" required>
+                <p class="file-name" id="speechFileName">No file chosen</p>
+                <p class="accepted-formats">.mp3, .wav, .m4a</p>
+            </div>
+
+            <!-- Spiral Drawing Card -->
+            <div class="upload-card">
+                <div class="upload-icon">✍️</div>
+                <h2 class="upload-title">Spiral Drawing</h2>
+                <p class="upload-description">Upload an image of your spiral drawing</p>
+                <label for="spiral_file" class="file-input-label">
+                    Click to upload or drag and drop
+                </label>
+                <input type="file" id="spiral_file" name="spiral_file" accept=".jpg,.jpeg,.png,.gif" class="file-input" required>
+                <p class="file-name" id="spiralFileName">No file chosen</p>
+                <p class="accepted-formats">.jpg, .jpeg, .png, .gif</p>
+            </div>
+
+            <!-- Posture Video Card -->
+            <div class="upload-card">
+                <div class="upload-icon">📹</div>
+                <h2 class="upload-title">Posture Video</h2>
+                <p class="upload-description">Upload a video showing your posture and gait</p>
+                <label for="posture_file" class="file-input-label">
+                    Click to upload or drag and drop
+                </label>
+                <input type="file" id="posture_file" name="posture_file" accept=".mp4,.avi,.mov,.mkv" class="file-input" required>
+                <p class="file-name" id="postureFileName">No file chosen</p>
+                <p class="accepted-formats">.mp4, .avi, .mov, .mkv</p>
+            </div>
+
+            <!-- AI Analysis Section -->
+            <div class="ai-analysis-card col-span-full">
+                <h2 class="ai-analysis-title">🤖 AI Analysis</h2>
+                <p class="ai-analysis-description">Advanced machine learning analysis of your uploaded data</p>
+                <button type="submit" id="analyzeBtn" class="analyze-btn" disabled>
+                    Analyze & Predict
+                    <span id="spinner" class="spinner hidden"></span>
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-500 py-6 text-center text-sm mt-auto">
+        &copy; 2024 ParkPredict. All rights reserved.
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const speechFileInput = document.getElementById('speech_file');
+            const spiralFileInput = document.getElementById('spiral_file');
+            const postureFileInput = document.getElementById('posture_file');
+
+            const speechFileName = document.getElementById('speechFileName');
+            const spiralFileName = document.getElementById('spiralFileName');
+            const postureFileName = document.getElementById('postureFileName');
+
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const spinner = document.getElementById('spinner');
+            const uploadForm = document.getElementById('uploadForm');
+
+            // Function to update file name display and check button state
+            function updateFileName(inputElement, fileNameElement) {
+                if (inputElement.files.length > 0) {
+                    fileNameElement.textContent = inputElement.files[0].name;
+                } else {
+                    fileNameElement.textContent = 'No file chosen';
+                }
+                checkAllFilesUploaded();
+            }
+
+            // Function to check if all required files are uploaded
+            function checkAllFilesUploaded() {
+                const allUploaded = speechFileInput.files.length > 0 &&
+                                    spiralFileInput.files.length > 0 &&
+                                    postureFileInput.files.length > 0;
+                analyzeBtn.disabled = !allUploaded;
+            }
+
+            // Add event listeners for file input changes
+            speechFileInput.addEventListener('change', () => updateFileName(speechFileInput, speechFileName));
+            spiralFileInput.addEventListener('change', () => updateFileName(spiralFileInput, spiralFileName));
+            postureFileInput.addEventListener('change', () => updateFileName(postureFileInput, postureFileName));
+
+            // Initial check on page load
+            checkAllFilesUploaded();
+
+            // Handle form submission (for demonstration, you'd send files to Django backend)
+            uploadForm.addEventListener('submit', async function(event) {
+                event.preventDefault(); // Prevent default form submission
+
+                if (!analyzeBtn.disabled) {
+                    analyzeBtn.disabled = true; // Disable button during processing
+                    spinner.classList.remove('hidden'); // Show spinner
+                    analyzeBtn.textContent = 'Analyzing...'; // Update button text
+
+                    // Simulate API call and processing time
+                    await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
+
+                    // Collect all form data (including initial quiz data from URL)
+                    const quizDataFromUrl = new URLSearchParams(window.location.search);
+                    const combinedData = {};
+                    for (const [key, value] of quizDataFromUrl.entries()) {
+                        combinedData[key] = value;
+                    }
+                    // For demonstration, simulate analysis results
+                    const simulatedAnalysisResults = {
+                        analysis_speech_tremor: 'detected',
+                        analysis_spiral_irregularity: 'moderate',
+                        analysis_gait_instability: 'mild',
+                        analysis_facial_masking: 'subtle',
+                        analysis_handwriting_micrographia: 'present',
+                        analysis_overall_score: '75', // Example score
+                        analysis_confidence: 'high'
+                    };
+
+                    // Merge simulated analysis results into combinedData
+                    Object.assign(combinedData, simulatedAnalysisResults);
+
+                    console.log('Combined Data for Results Page:', combinedData);
+
+                    // Redirect to results page after analysis
+                    const queryString = new URLSearchParams(combinedData).toString();
+                    window.location.href = `{% url 'results' %}?${queryString}`;
+
+                } else {
+                    // This case should ideally not be reached if the button is disabled
+                    const messageBox = document.createElement('div');
+                    messageBox.className = 'error-message show';
+                    messageBox.textContent = 'Please upload all required files.';
+                    document.body.appendChild(messageBox);
+                    setTimeout(() => messageBox.remove(), 3000);
+                }
+            });
+
+            // Drag and drop functionality
+            const uploadCards = document.querySelectorAll('.upload-card');
+            uploadCards.forEach(card => {
+                card.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    card.classList.add('border-purple-500', 'bg-purple-50'); /* Highlight on drag over */
+                });
+
+                card.addEventListener('dragleave', (e) => {
+                    card.classList.remove('border-purple-500', 'bg-purple-50');
+                });
+
+                card.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    card.classList.remove('border-purple-500', 'bg-purple-50');
+                    const fileInput = card.querySelector('.file-input');
+                    if (e.dataTransfer.files.length > 0) {
+                        fileInput.files = e.dataTransfer.files;
+                        updateFileName(fileInput, card.querySelector('.file-name'));
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

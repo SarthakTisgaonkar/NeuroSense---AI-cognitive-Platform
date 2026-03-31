@@ -1,0 +1,273 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parkinson's Disease Detection System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light gray background */
+            color: #333;
+            min-height: 100vh; /* Ensure body takes full viewport height */
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+        .gradient-bg {
+            background: linear-gradient(to right, #6a0dad, #8a2be2); /* Purple gradient */
+        }
+        .btn-primary {
+            background-color: #8a2be2; /* Violet */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px; /* Fully rounded */
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease; /* Added transform for hover effect */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary:hover {
+            background-color: #6a0dad; /* Darker violet on hover */
+            transform: translateY(-2px); /* Lift effect */
+        }
+        .btn-secondary { /* Style for Watch Demo button */
+            background-color: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: all 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.2); /* Slight white background on hover */
+            transform: translateY(-2px);
+        }
+        .btn-quiz { /* New style for Take Quiz button */
+            background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%); /* Orange-yellow gradient */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: all 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-quiz:hover {
+            background: linear-gradient(90deg, #d97706 0%, #facc15 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-title {
+            color: #1a202c; /* Dark text */
+            font-size: 2.25rem; /* text-4xl */
+            font-weight: 800; /* font-extrabold */
+            margin-bottom: 2rem;
+        }
+        .card {
+            background-color: white;
+            border-radius: 1.5rem; /* rounded-3xl */
+            padding: 2rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* shadow-xl */
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .icon-circle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 9999px;
+            background-color: #e9d5ff; /* Light purple */
+            color: #8a2be2; /* Violet */
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .footer-link {
+            color: #cbd5e0; /* Gray-300 */
+            transition: color 0.3s ease;
+        }
+        .footer-link:hover {
+            color: #ffffff;
+        }
+
+        /* Navbar specific styles */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #333;
+        }
+        .navbar-links a {
+            color: #4a5568;
+            font-weight: 500;
+            margin-left: 2rem;
+            transition: color 0.3s ease;
+        }
+        .navbar-links a:hover {
+            color: #8a2be2;
+        }
+        .navbar-auth {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .navbar-auth .login-link {
+            color: #4a5568;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.3s ease;
+        }
+        .navbar-auth .login-link:hover {
+            color: #8a2be2;
+        }
+        .navbar-auth .get-started-btn {
+            background-color: #8a2be2;
+            color: white;
+            padding: 0.5rem 1.25rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .navbar-auth .get-started-btn:hover {
+            background-color: #6a0dad;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+        .user-icon {
+            font-size: 1.25rem;
+            color: #8a2be2;
+        }
+        .logout-btn {
+            background-color: #ef4444; /* Red */
+            color: white;
+            padding: 0.5rem 1.25rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .logout-btn:hover {
+            background-color: #dc2626; /* Darker red */
+        }
+
+        /* Message Styles (for landing page too) */
+        .message-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            width: auto;
+            max-width: 90%;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            animation: fadeInOut 4s ease-in-out forwards;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .message-success {
+            background-color: #d1fae5; /* Green-100 */
+            color: #065f46; /* Green-800 */
+            border: 1px solid #34d399; /* Green-400 */
+        }
+        .message-error {
+            background-color: #fee2e2; /* Red-100 */
+            color: #991b1b; /* Red-800 */
+            border: 1px solid #f87171; /* Red-400 */
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header/Navigation -->
+    <header class="navbar">
+        <div class="navbar-brand">PD ParkinsonAI</div>
+        <nav class="navbar-links">
+            <a href="{% url 'home' %}" class="font-bold text-purple-700">Home</a>
+            <a href="{% url 'spiral_detection' %}">Assessment</a>
+            <a href="#">About</a>
+            <a href="#">Contact</a> 
+            <a href="{% url 'assessment_history' %}">History</a>
+        </nav>
+        <div class="navbar-auth">
+            {% if user.is_authenticated %}
+                <div class="user-info">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 user-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Hello, {{ user.username }}</span>
+                </div>
+                <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="login-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                    </svg>
+                    Login
+                </a>
+                <a href="{% url 'register' %}" class="get-started-btn">Get Started</a>
+            {% endif %}
+        </div>
+    </header>
+
+
+    <!-- Flash Messages -->
+    {% if messages %}
+        <div class="message-container {% for message in messages %}{% if message.tags == 'success' %}message-success{% elif message.tags == 'error' %}message-error{% endif %}{% endfor %}">
+            {% for message in messages %}
+                {% if message.tags == 'success' %}
+                    ✅
+                {% elif message.tags == 'error' %}
+                    ❌
+                {% endif %}
+                {{ message }}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Page Content -->
+    <main class="flex-grow px-6 py-8">
+        {% block content %}
+        <!-- Child templates will inject here -->
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-6 text-center">
+        &copy; 2025 ParkPredict. All rights reserved.
+    </footer>
+</body>
+</html>
