@@ -27,41 +27,40 @@ DURATION = 3
 N_MFCC = 40
 TIMESTEPS = 360
 
-# Load the trained CNN models
+# Model paths
 MODEL_PATH_ORIG = 'parkinson_disease_detection.h5'
 MODEL_PATH_VGG = 'spiral_model_fixed.keras'
 MODEL_PATH_VOICE = 'cnn_parkinson_model_refined.keras'
 
-try:
-    print(f"Loading VOICE model from {MODEL_PATH_VOICE}...")
-    model_voice = load_model(MODEL_PATH_VOICE)
-    # Warm-up: run a dummy prediction to initialize the TF graph in this thread
-    _dummy_audio = np.zeros((1, TIMESTEPS, N_MFCC), dtype=np.float32)
-    model_voice.predict(_dummy_audio, verbose=0)
-    print("Voice model loaded and warmed up successfully.")
-except Exception as e:
-    print(f"Error loading voice model: {e}")
-    model_voice = None
+# Lazy-loaded model cache — None until first request is received.
+# This prevents simultaneous TF model loading at boot which OOMs free-tier servers.
+_model_voice = None
+_model_orig = None
+_model_vgg = None
 
-try:
-    print(f"Loading ORIGINAL model from {MODEL_PATH_ORIG}...")
-    model_orig = load_model(MODEL_PATH_ORIG)
-    _dummy_img_orig = np.zeros((1, 128, 128, 1), dtype=np.float32)
-    model_orig.predict(_dummy_img_orig, verbose=0)
-    print("Original model loaded and warmed up.")
-except Exception as e:
-    print(f"Error loading original model: {e}")
-    model_orig = None
+def get_model_voice():
+    global _model_voice
+    if _model_voice is None:
+        print(f"[Lazy Load] Loading VOICE model from {MODEL_PATH_VOICE}...")
+        _model_voice = load_model(MODEL_PATH_VOICE)
+        print("[Lazy Load] Voice model ready.")
+    return _model_voice
 
-try:
-    print(f"Loading NEW VGG model from {MODEL_PATH_VGG}...")
-    model_vgg = load_model(MODEL_PATH_VGG)
-    _dummy_img_vgg = np.zeros((1, 224, 224, 3), dtype=np.float32)
-    model_vgg.predict(_dummy_img_vgg, verbose=0)
-    print("New VGG model loaded and warmed up.")
-except Exception as e:
-    print(f"Error loading new VGG model: {e}")
-    model_vgg = None
+def get_model_orig():
+    global _model_orig
+    if _model_orig is None:
+        print(f"[Lazy Load] Loading ORIG model from {MODEL_PATH_ORIG}...")
+        _model_orig = load_model(MODEL_PATH_ORIG)
+        print("[Lazy Load] Orig model ready.")
+    return _model_orig
+
+def get_model_vgg():
+    global _model_vgg
+    if _model_vgg is None:
+        print(f"[Lazy Load] Loading VGG model from {MODEL_PATH_VGG}...")
+        _model_vgg = load_model(MODEL_PATH_VGG)
+        print("[Lazy Load] VGG model ready.")
+    return _model_vgg
 
 def preprocess_image_orig(image_bytes):
     nparr = np.frombuffer(image_bytes, np.uint8)
@@ -196,8 +195,10 @@ def preprocess_audio_for_cnn(audio_bytes, original_filename='audio.wav'):
 
 @app.route('/predict/voice', methods=['POST'])
 def predict_voice():
-    if model_voice is None:
-        return jsonify({"error": "Voice model failed to load on server."}), 500
+    try:
+        model_voice = get_model_voice()
+    except Exception as e:
+        return jsonify({"error": f"Voice model failed to load: {e}"}), 500
 
     try:
         # Check if file part exists in request
@@ -256,8 +257,11 @@ def predict_voice():
 
 @app.route('/predict/spiral', methods=['POST'])
 def predict_spiral():
-    if model_orig is None or model_vgg is None:
-        return jsonify({"error": "One or both models failed to load on server."}), 500
+    try:
+        model_orig = get_model_orig()
+        model_vgg = get_model_vgg()
+    except Exception as e:
+        return jsonify({"error": f"Spiral model(s) failed to load: {e}"}), 500
 
     try:
         data = request.json
@@ -315,8 +319,8 @@ def predict_spiral():
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    models_loaded = (model_orig is not None) and (model_vgg is not None) and (model_voice is not None)
-    return jsonify({"status": "running", "models_loaded": models_loaded})
+    models_loaded = (_model_orig is not None) and (_model_vgg is not None) and (_model_voice is not None)
+    return jsonify({"status": "running", "models_loaded": models_loaded, "note": "models load on first prediction request"})
 
 if __name__ == '__main__':
     print("Starting Flask API Server on port 5000...")
