@@ -1,5 +1,6 @@
 import os
 import base64
+import json
 import cv2
 import numpy as np
 import io
@@ -9,7 +10,8 @@ from PIL import Image
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import tensorflow as tf
-from tensorflow.keras.models import load_model
+from tensorflow.keras.models import Sequential, model_from_json
+from tensorflow.keras.layers import Conv1D, MaxPooling1D, Dropout, Dense, Flatten, Input
 
 try:
     import imageio_ffmpeg
@@ -18,47 +20,81 @@ except ImportError:
     pass
 
 app = Flask(__name__)
-# Enable CORS for the React frontend (running on Vite's default ports like 5173)
 CORS(app)
 
-# Audio constants - must be defined before model loading for the warm-up call
+# Audio constants
 SAMPLE_RATE = 22050
 DURATION = 3
 N_MFCC = 40
 TIMESTEPS = 360
 
-# Model paths — using legacy .h5 format for cross-version Keras compatibility
-MODEL_PATH_ORIG = 'model_orig.h5'
-MODEL_PATH_VGG = 'model_vgg.h5'
-MODEL_PATH_VOICE = 'model_voice.h5'
+# Weight file paths (numpy .npz — fully version-agnostic)
+VOICE_WEIGHTS = 'voice_weights.npz'
+ORIG_WEIGHTS  = 'orig_weights.npz'
+ORIG_CONFIG   = 'orig_config.json'
+VGG_WEIGHTS   = 'vgg_weights.npz'
+VGG_CONFIG    = 'vgg_config.json'
 
-# Lazy-loaded model cache — None until first request is received.
-# This prevents simultaneous TF model loading at boot which OOMs free-tier servers.
+# Lazy-loaded model cache
 _model_voice = None
-_model_orig = None
-_model_vgg = None
+_model_orig  = None
+_model_vgg   = None
+
+def _load_weights_from_npz(model, npz_path):
+    """Load weights from a .npz file into a Keras model."""
+    data = np.load(npz_path, allow_pickle=False)
+    # np.savez stores arrays as arr_0, arr_1, ...
+    weights = [data[k] for k in sorted(data.files, key=lambda x: int(x.split('_')[1]))]
+    model.set_weights(weights)
+    return model
+
+def _build_voice_model():
+    """Rebuild the 1D CNN voice model architecture from scratch (from train_audio_cnn.py)."""
+    model = Sequential([
+        Input(shape=(TIMESTEPS, N_MFCC)),
+        Conv1D(filters=64, kernel_size=5, activation='relu'),
+        MaxPooling1D(pool_size=2),
+        Dropout(0.3),
+        Conv1D(filters=128, kernel_size=3, activation='relu'),
+        MaxPooling1D(pool_size=2),
+        Dropout(0.3),
+        Flatten(),
+        Dense(64, activation='relu'),
+        Dropout(0.4),
+        Dense(1, activation='sigmoid')
+    ])
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    return model
 
 def get_model_voice():
     global _model_voice
     if _model_voice is None:
-        print(f"[Lazy Load] Loading VOICE model from {MODEL_PATH_VOICE}...")
-        _model_voice = load_model(MODEL_PATH_VOICE)
+        print("[Lazy Load] Building VOICE model architecture...")
+        model = _build_voice_model()
+        print(f"[Lazy Load] Loading VOICE weights from {VOICE_WEIGHTS}...")
+        _model_voice = _load_weights_from_npz(model, VOICE_WEIGHTS)
         print("[Lazy Load] Voice model ready.")
     return _model_voice
 
 def get_model_orig():
     global _model_orig
     if _model_orig is None:
-        print(f"[Lazy Load] Loading ORIG model from {MODEL_PATH_ORIG}...")
-        _model_orig = load_model(MODEL_PATH_ORIG)
+        print(f"[Lazy Load] Building ORIG model from {ORIG_CONFIG}...")
+        with open(ORIG_CONFIG, 'r') as f:
+            _model_orig = model_from_json(f.read())
+        print(f"[Lazy Load] Loading ORIG weights from {ORIG_WEIGHTS}...")
+        _model_orig = _load_weights_from_npz(_model_orig, ORIG_WEIGHTS)
         print("[Lazy Load] Orig model ready.")
     return _model_orig
 
 def get_model_vgg():
     global _model_vgg
     if _model_vgg is None:
-        print(f"[Lazy Load] Loading VGG model from {MODEL_PATH_VGG}...")
-        _model_vgg = load_model(MODEL_PATH_VGG)
+        print(f"[Lazy Load] Building VGG model from {VGG_CONFIG}...")
+        with open(VGG_CONFIG, 'r') as f:
+            _model_vgg = model_from_json(f.read())
+        print(f"[Lazy Load] Loading VGG weights from {VGG_WEIGHTS}...")
+        _model_vgg = _load_weights_from_npz(_model_vgg, VGG_WEIGHTS)
         print("[Lazy Load] VGG model ready.")
     return _model_vgg
 

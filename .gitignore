@@ -28,15 +28,20 @@ backend/db.sqlite3
 .env.local
 .env.*.local
 
-# Ignore ALL model files by default
+# Ignore ALL compiled model files (too large / version-sensitive)
 backend/*.h5
 backend/*.keras
 backend/*.joblib
 
-# Allow ONLY the re-saved cross-version compatible models
-!backend/model_voice.h5
-!backend/model_orig.h5
-!backend/model_vgg.h5
+# Allow ONLY the version-agnostic numpy weight dumps
+!backend/voice_weights.npz
+!backend/orig_weights.npz
+!backend/vgg_weights.npz
 
-# Ignore the conversion script and temp files
+# Allow model architecture JSON configs (needed to rebuild spiral models)
+!backend/orig_config.json
+!backend/vgg_config.json
+
+# Ignore helper/conversion scripts
 backend/resave_models.py
+backend/extract_weights.py
