@@ -1,1 +1,1 @@
-# NeuroSense--AI-Powered-assesment-platform
+# NeuroSense---AI-cognitive-Platform
