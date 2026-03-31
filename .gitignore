@@ -28,13 +28,15 @@ backend/db.sqlite3
 .env.local
 .env.*.local
 
-# Allow small models, ignore large models EXCEPT those explicitly tracked
-# Note: We will git add the explicitly required models so they bypass this ignore
+# Ignore ALL model files by default
 backend/*.h5
 backend/*.keras
 backend/*.joblib
 
-# But force inclusion of needed models
-!backend/cnn_parkinson_model_refined.keras
-!backend/parkinson_disease_detection.h5
-!backend/spiral_model_fixed.keras
+# Allow ONLY the re-saved cross-version compatible models
+!backend/model_voice.h5
+!backend/model_orig.h5
+!backend/model_vgg.h5
+
+# Ignore the conversion script and temp files
+backend/resave_models.py

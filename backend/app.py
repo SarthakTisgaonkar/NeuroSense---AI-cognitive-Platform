@@ -27,10 +27,10 @@ DURATION = 3
 N_MFCC = 40
 TIMESTEPS = 360
 
-# Model paths
-MODEL_PATH_ORIG = 'parkinson_disease_detection.h5'
-MODEL_PATH_VGG = 'spiral_model_fixed.keras'
-MODEL_PATH_VOICE = 'cnn_parkinson_model_refined.keras'
+# Model paths — using legacy .h5 format for cross-version Keras compatibility
+MODEL_PATH_ORIG = 'model_orig.h5'
+MODEL_PATH_VGG = 'model_vgg.h5'
+MODEL_PATH_VOICE = 'model_voice.h5'
 
 # Lazy-loaded model cache — None until first request is received.
 # This prevents simultaneous TF model loading at boot which OOMs free-tier servers.
