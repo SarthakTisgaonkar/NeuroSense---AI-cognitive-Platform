@@ -15,4 +15,4 @@ COPY backend/ .
 
 # The PORT environment variable is injected by Railway automatically
 # Start the Gunicorn server
-CMD gunicorn app:app -w 2 -b 0.0.0.0:$PORT --preload --timeout 120
+CMD gunicorn app:app -w 1 -b 0.0.0.0:$PORT --timeout 120 --max-requests 10 --max-requests-jitter 2

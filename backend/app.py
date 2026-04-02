@@ -2,12 +2,16 @@ import os
 os.environ["NUMBA_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["NUMBA_DISABLE_JIT"] = "1" # Save memory from librosa
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
 import base64
 import json
 import cv2
 import numpy as np
 import io
 import traceback
+import gc
 
 # Import librosa AFTER setting NUMBA_DISABLE_JIT
 import librosa
@@ -17,6 +21,9 @@ from flask_cors import CORS
 import tensorflow as tf
 from tensorflow.keras.models import Sequential, model_from_json
 from tensorflow.keras.layers import Conv1D, MaxPooling1D, Dropout, Dense, Flatten, Input
+
+tf.config.threading.set_inter_op_parallelism_threads(1)
+tf.config.threading.set_intra_op_parallelism_threads(1)
 
 try:
     import imageio_ffmpeg
@@ -40,10 +47,8 @@ ORIG_CONFIG   = 'orig_config.json'
 VGG_WEIGHTS   = 'vgg_weights.npz'
 VGG_CONFIG    = 'vgg_config.json'
 
-# Lazy-loaded model cache
-_model_voice = None
-_model_orig  = None
-_model_vgg   = None
+# To save memory, we do NOT cache models globally on Render Free Tier.
+# We load, predict, and clear the TF session instead.
 
 def _load_weights_from_npz(model, npz_path):
     """Load weights from a .npz file into a Keras model."""
@@ -69,16 +74,6 @@ def _build_voice_model():
     ])
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     return model
-
-def get_model_voice():
-    global _model_voice
-    if _model_voice is None:
-        print("[Lazy Load] Building VOICE model architecture...")
-        model = _build_voice_model()
-        print(f"[Lazy Load] Loading VOICE weights from {VOICE_WEIGHTS}...")
-        _model_voice = _load_weights_from_npz(model, VOICE_WEIGHTS)
-        print("[Lazy Load] Voice model ready.")
-    return _model_voice
 
 def _build_orig_model():
     from tensorflow.keras.models import Sequential
@@ -121,26 +116,6 @@ def _build_vgg_model():
         Dense(1, activation='sigmoid')
     ])
     return model
-
-def get_model_orig():
-    global _model_orig
-    if _model_orig is None:
-        print("[Lazy Load] Building ORIG model architecture...")
-        model = _build_orig_model()
-        print(f"[Lazy Load] Loading ORIG weights from {ORIG_WEIGHTS}...")
-        _model_orig = _load_weights_from_npz(model, ORIG_WEIGHTS)
-        print("[Lazy Load] Orig model ready.")
-    return _model_orig
-
-def get_model_vgg():
-    global _model_vgg
-    if _model_vgg is None:
-        print("[Lazy Load] Building VGG model architecture...")
-        model = _build_vgg_model()
-        print(f"[Lazy Load] Loading VGG weights from {VGG_WEIGHTS}...")
-        _model_vgg = _load_weights_from_npz(model, VGG_WEIGHTS)
-        print("[Lazy Load] VGG model ready.")
-    return _model_vgg
 
 def preprocess_image_orig(image_bytes):
     nparr = np.frombuffer(image_bytes, np.uint8)
@@ -276,11 +251,6 @@ def preprocess_audio_for_cnn(audio_bytes, original_filename='audio.wav'):
 @app.route('/predict/voice', methods=['POST'])
 def predict_voice():
     try:
-        model_voice = get_model_voice()
-    except Exception as e:
-        return jsonify({"error": f"Voice model failed to load: {e}"}), 500
-
-    try:
         # Check if file part exists in request
         if 'audio' not in request.files:
             return jsonify({"error": "No audio file provided."}), 400
@@ -294,8 +264,19 @@ def predict_voice():
         # Preprocess
         features, wav_b64 = preprocess_audio_for_cnn(audio_bytes, original_filename=audio_file.filename)
         
+        # Build model and predict stateless-ly to save RAM
+        print("[Memory Management] Building Voice Model...")
+        model_voice = _build_voice_model()
+        model_voice = _load_weights_from_npz(model_voice, VOICE_WEIGHTS)
+        
         # Predict Model (CNN)
         preds = model_voice.predict(features)
+        
+        # Clear TF context
+        del model_voice
+        tf.keras.backend.clear_session()
+        gc.collect()
+        print("[Memory Management] Voice Model cleared from RAM.")
         
         raw_parkinson_prob = float(preds[0][0]) if preds.shape[1] == 1 else float(preds[0][1])
         
@@ -338,12 +319,6 @@ def predict_voice():
 @app.route('/predict/spiral', methods=['POST'])
 def predict_spiral():
     try:
-        model_orig = get_model_orig()
-        model_vgg = get_model_vgg()
-    except Exception as e:
-        return jsonify({"error": f"Spiral model(s) failed to load: {e}"}), 500
-
-    try:
         data = request.json
         if not data or 'image' not in data:
             return jsonify({"error": "No image data provided. Please provide a base64 encoded 'image' string."}), 400
@@ -358,15 +333,26 @@ def predict_spiral():
         processed_img_orig = preprocess_image_orig(image_bytes)
         processed_img_vgg = preprocess_image_vgg(image_bytes)
         
-        # Predict Model 1 (Original)
-        # Returns [[prob_healthy, prob_parkinson]]
+        # 1. Load and predict Orig Model
+        print("[Memory Management] Building Orig Model...")
+        model_orig = _build_orig_model()
+        model_orig = _load_weights_from_npz(model_orig, ORIG_WEIGHTS)
         pred_orig = model_orig.predict(processed_img_orig)[0]
         prob_parkinson_orig = float(pred_orig[1])
+        del model_orig
+        tf.keras.backend.clear_session()
+        gc.collect()
         
-        # Predict Model 2 (VGG)
-        # Returns [[prob_parkinson]]
+        # 2. Load and predict VGG Model
+        print("[Memory Management] Building VGG Model...")
+        model_vgg = _build_vgg_model()
+        model_vgg = _load_weights_from_npz(model_vgg, VGG_WEIGHTS)
         pred_vgg = model_vgg.predict(processed_img_vgg)[0]
         prob_parkinson_vgg = float(pred_vgg[0])
+        del model_vgg
+        tf.keras.backend.clear_session()
+        gc.collect()
+        print("[Memory Management] Both Spiral Models cleared from RAM.")
         
         # Ensemble Average
         final_parkinson_prob = (prob_parkinson_orig + prob_parkinson_vgg) / 2.0
@@ -399,8 +385,7 @@ def predict_spiral():
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    models_loaded = (_model_orig is not None) and (_model_vgg is not None) and (_model_voice is not None)
-    return jsonify({"status": "running", "models_loaded": models_loaded, "note": "models load on first prediction request"})
+    return jsonify({"status": "running", "models_loaded": "stateless mode via per-request loading (Memory Safe)"})
 
 if __name__ == '__main__':
     print("Starting Flask API Server on port 5000...")
