@@ -55,8 +55,7 @@ def _load_weights_from_npz(model, npz_path):
 def _build_voice_model():
     """Rebuild the 1D CNN voice model architecture from scratch (from train_audio_cnn.py)."""
     model = Sequential([
-        Input(shape=(TIMESTEPS, N_MFCC)),
-        Conv1D(filters=64, kernel_size=5, activation='relu'),
+        Conv1D(filters=64, kernel_size=5, activation='relu', input_shape=(TIMESTEPS, N_MFCC)),
         MaxPooling1D(pool_size=2),
         Dropout(0.3),
         Conv1D(filters=128, kernel_size=3, activation='relu'),
@@ -86,8 +85,7 @@ def _build_orig_model():
     from tensorflow.keras.regularizers import l2
 
     model = Sequential([
-        Input(shape=(128, 128, 1)),
-        Conv2D(128, (5, 5), padding='same', activation='relu', kernel_regularizer=l2(0.001)),
+        Conv2D(128, (5, 5), padding='same', activation='relu', kernel_regularizer=l2(0.001), input_shape=(128, 128, 1)),
         MaxPooling2D(pool_size=(9, 9), strides=(3, 3)),
         
         Conv2D(64, (5, 5), padding='same', activation='relu', kernel_regularizer=l2(0.001)),
@@ -115,7 +113,6 @@ def _build_vgg_model():
     vgg_base = VGG16(weights=None, include_top=False, input_shape=(224, 224, 3))
     
     model = Sequential([
-        Input(shape=(224, 224, 3)),
         vgg_base,
         Flatten(),
         Dense(128, activation='relu'),
