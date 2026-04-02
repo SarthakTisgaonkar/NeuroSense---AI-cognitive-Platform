@@ -76,25 +76,67 @@ def get_model_voice():
         print("[Lazy Load] Voice model ready.")
     return _model_voice
 
+def _build_orig_model():
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+    from tensorflow.keras.regularizers import l2
+
+    model = Sequential([
+        Input(shape=(128, 128, 1)),
+        Conv2D(128, (5, 5), padding='same', activation='relu', kernel_regularizer=l2(0.001)),
+        MaxPooling2D(pool_size=(9, 9), strides=(3, 3)),
+        
+        Conv2D(64, (5, 5), padding='same', activation='relu', kernel_regularizer=l2(0.001)),
+        MaxPooling2D(pool_size=(7, 7), strides=(3, 3)),
+        
+        Conv2D(32, (3, 3), padding='same', activation='relu', kernel_regularizer=l2(0.001)),
+        MaxPooling2D(pool_size=(5, 5), strides=(2, 2)),
+        
+        Conv2D(32, (3, 3), padding='same', activation='relu', kernel_regularizer=l2(0.001)),
+        MaxPooling2D(pool_size=(3, 3), strides=(2, 2)),
+        
+        Flatten(),
+        Dropout(0.5),
+        Dense(64, activation='relu'),
+        Dropout(0.5),
+        Dense(2, activation='softmax')
+    ])
+    return model
+
+def _build_vgg_model():
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.layers import Input, Flatten, Dense, Dropout
+    from tensorflow.keras.applications import VGG16
+
+    vgg_base = VGG16(weights=None, include_top=False, input_shape=(224, 224, 3))
+    
+    model = Sequential([
+        Input(shape=(224, 224, 3)),
+        vgg_base,
+        Flatten(),
+        Dense(128, activation='relu'),
+        Dropout(0.5),
+        Dense(1, activation='sigmoid')
+    ])
+    return model
+
 def get_model_orig():
     global _model_orig
     if _model_orig is None:
-        print(f"[Lazy Load] Building ORIG model from {ORIG_CONFIG}...")
-        with open(ORIG_CONFIG, 'r') as f:
-            _model_orig = model_from_json(f.read())
+        print("[Lazy Load] Building ORIG model architecture...")
+        model = _build_orig_model()
         print(f"[Lazy Load] Loading ORIG weights from {ORIG_WEIGHTS}...")
-        _model_orig = _load_weights_from_npz(_model_orig, ORIG_WEIGHTS)
+        _model_orig = _load_weights_from_npz(model, ORIG_WEIGHTS)
         print("[Lazy Load] Orig model ready.")
     return _model_orig
 
 def get_model_vgg():
     global _model_vgg
     if _model_vgg is None:
-        print(f"[Lazy Load] Building VGG model from {VGG_CONFIG}...")
-        with open(VGG_CONFIG, 'r') as f:
-            _model_vgg = model_from_json(f.read())
+        print("[Lazy Load] Building VGG model architecture...")
+        model = _build_vgg_model()
         print(f"[Lazy Load] Loading VGG weights from {VGG_WEIGHTS}...")
-        _model_vgg = _load_weights_from_npz(_model_vgg, VGG_WEIGHTS)
+        _model_vgg = _load_weights_from_npz(model, VGG_WEIGHTS)
         print("[Lazy Load] VGG model ready.")
     return _model_vgg
 
