@@ -1,6 +1,7 @@
 import os
-os.environ["NUMBA_DISABLE_JIT"] = "1"  # CRITICAL FIX for out-of-memory (OOM) LLVM spikes during librosa/numba processing!
-
+os.environ["NUMBA_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
 import base64
 import json
 import cv2
@@ -184,9 +185,9 @@ def preprocess_audio_for_cnn(audio_bytes, original_filename='audio.wav'):
         import imageio_ffmpeg
         ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
         
-        # Convert any format to standardized WAV, ignoring console spam
+        # Convert any format to standardized WAV, limit to 5 seconds to prevent memory overflow
         subprocess.run(
-            [ffmpeg_exe, '-y', '-i', tmp_in.name, '-ar', str(SAMPLE_RATE), '-ac', '1', tmp_out.name],
+            [ffmpeg_exe, '-y', '-i', tmp_in.name, '-t', '5', '-ar', str(SAMPLE_RATE), '-ac', '1', tmp_out.name],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             check=True
