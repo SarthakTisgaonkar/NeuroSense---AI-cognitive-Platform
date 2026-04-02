@@ -1,10 +1,14 @@
 import os
+os.environ["NUMBA_DISABLE_JIT"] = "1"  # CRITICAL FIX for out-of-memory (OOM) LLVM spikes during librosa/numba processing!
+
 import base64
 import json
 import cv2
 import numpy as np
 import io
 import traceback
+
+# Import librosa AFTER setting NUMBA_DISABLE_JIT
 import librosa
 from PIL import Image
 from flask import Flask, request, jsonify
